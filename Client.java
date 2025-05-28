@@ -17,7 +17,7 @@ public class Client {
         ArrayList<String> path = findPath(A);
         System.out.println("Path Coordinates:");
         System.out.println(path);
-        System.out.println("\nPath Map (only 1s on the path):");
+        System.out.println("\nVisualization of path:");
         printPathOnly(path, A);
     }
 
@@ -25,50 +25,28 @@ public class Client {
         int R = map.size(), C = map.get(0).size();
         boolean[][] visited = new boolean[R][C];
         ArrayList<String> path = new ArrayList<>();
-        
-        // Find a valid starting point (a 1) on the top or left wall
+
+        // Try all top wall entries
         for (int j = 0; j < C; j++) {
             if (map.get(0).get(j) == 1) {
-                if (dfs(0, j, map, visited, path, null, 0, j)) {
-                    // After finding the initial path, continue through all 1s in the bottom row
-                    int lastRow = R - 1;
-                    for (int k = 0; k < C; k++) {
-                        if (map.get(lastRow).get(k) == 1) {
-                            String coord = "A[" + lastRow + "][" + k + "]";
-                            if (!path.contains(coord)) {
-                                path.add(coord);
-                            }
-                        }
-                    }
+                if (dfs(0, j, map, visited, path, -1, false, 0, j)) {
                     return path;
                 }
             }
         }
-        
-        // If no valid path found from top wall, try left wall
+        // Try all left wall entries except (0,0)
         for (int i = 1; i < R; i++) {
             if (map.get(i).get(0) == 1) {
-                if (dfs(i, 0, map, visited, path, null, i, 0)) {
-                    // After finding the initial path, continue through all 1s in the bottom row
-                    int lastRow = R - 1;
-                    for (int k = 0; k < C; k++) {
-                        if (map.get(lastRow).get(k) == 1) {
-                            String coord = "A[" + lastRow + "][" + k + "]";
-                            if (!path.contains(coord)) {
-                                path.add(coord);
-                            }
-                        }
-                    }
+                if (dfs(i, 0, map, visited, path, -1, false, i, 0)) {
                     return path;
                 }
             }
         }
-        
         return new ArrayList<>();
     }
 
-    static boolean dfs(int i, int j, ArrayList<ArrayList<Integer>> map, boolean[][] visited, 
-                      ArrayList<String> path, Integer prevDir, int startI, int startJ) {
+    static boolean dfs(int i, int j, ArrayList<ArrayList<Integer>> map, boolean[][] visited,
+                      ArrayList<String> path, int prevDir, boolean hasTurn, int startI, int startJ) {
         int R = map.size(), C = map.get(0).size();
         if (i < 0 || i >= R || j < 0 || j >= C) return false;
         if (visited[i][j] || map.get(i).get(j) != 1) return false;
@@ -76,57 +54,33 @@ public class Client {
         visited[i][j] = true;
         path.add("A[" + i + "][" + j + "]");
 
-        // If we're on the bottom row and we've made a turn, we're done with the initial path
-        if (i == R-1 && hasTurn(path)) {
+        if (isExit(i, j, R, C, startI, startJ) && hasTurn) {
             return true;
         }
 
-        // Try all four directions
         int[][] dirs = {{-1,0}, {1,0}, {0,-1}, {0,1}};
         for (int d = 0; d < 4; d++) {
             int ni = i + dirs[d][0], nj = j + dirs[d][1];
-            if (dfs(ni, nj, map, visited, path, d, startI, startJ)) {
+            boolean turned = hasTurn || (prevDir != -1 && d != prevDir);
+            if (dfs(ni, nj, map, visited, path, d, turned, startI, startJ)) {
                 return true;
             }
         }
 
-        // Backtrack
         visited[i][j] = false;
         path.remove(path.size() - 1);
         return false;
     }
 
-    static boolean hasTurn(ArrayList<String> path) {
-        if (path.size() < 3) return false;
-        int[] prev = parseCoord(path.get(0));
-        int[] cur = parseCoord(path.get(1));
-        int prevDir = getDir(prev, cur);
-        
-        for (int k = 2; k < path.size(); k++) {
-            int[] next = parseCoord(path.get(k));
-            int dir = getDir(cur, next);
-            if (dir != prevDir) return true;
-            prev = cur;
-            cur = next;
-            prevDir = dir;
-        }
+    static boolean isExit(int i, int j, int R, int C, int startI, int startJ) {
+        // Must be on a wall, but NOT the starting wall
+        boolean onEdge = i == 0 || j == 0 || i == R-1 || j == C-1;
+        if (!onEdge) return false;
+        // Started on top wall
+        if (startI == 0) return i != 0;
+        // Started on left wall
+        if (startJ == 0) return j != 0;
         return false;
-    }
-
-    static int getDir(int[] a, int[] b) {
-        if (b[0] == a[0] - 1) return 0; // up
-        if (b[0] == a[0] + 1) return 1; // down
-        if (b[1] == a[1] - 1) return 2; // left
-        if (b[1] == a[1] + 1) return 3; // right
-        return -1;
-    }
-
-    static int[] parseCoord(String s) {
-        int i1 = s.indexOf('['), i2 = s.indexOf(']', i1);
-        int j1 = s.indexOf('[', i2), j2 = s.indexOf(']', j1);
-        int i = Integer.parseInt(s.substring(i1 + 1, i2));
-        int j = Integer.parseInt(s.substring(j1 + 1, j2));
-        return new int[]{i, j};
     }
 
     static void printPathOnly(ArrayList<String> path, ArrayList<ArrayList<Integer>> map) {
