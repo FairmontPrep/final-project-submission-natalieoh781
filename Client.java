@@ -3,12 +3,12 @@ import java.util.*;
 public class Client {
     static ArrayList<ArrayList<Integer>> A = new ArrayList<>(Arrays.asList(
         //INPUT MAZE HERE
-        new ArrayList<>(Arrays.asList(1, 1, 0, 0, 0, 0, 0, 0 )),
-        new ArrayList<>(Arrays.asList(0, 1, 0, 0, 0, 0, 1, 0 )),
-        new ArrayList<>(Arrays.asList(0, 1, 0, 0, 0, 0, 0, 0 )),
-        new ArrayList<>(Arrays.asList(0, 1, 0, 0, 0, 0, 0, 0 )),
-        new ArrayList<>(Arrays.asList(0, 1, 1, 1, 0, 0, 0, 0 )),
+        new ArrayList<>(Arrays.asList(1, 1, 0, 1, 0, 0, 0, 0 )),
+        new ArrayList<>(Arrays.asList(0, 0, 0, 1, 0, 0, 1, 0 )),
         new ArrayList<>(Arrays.asList(0, 0, 0, 1, 0, 0, 0, 0 )),
+        new ArrayList<>(Arrays.asList(0, 0, 1, 1, 0, 0, 0, 0 )),
+        new ArrayList<>(Arrays.asList(0, 0, 1, 0, 0, 0, 0, 0 )),
+        new ArrayList<>(Arrays.asList(0, 0, 1, 1, 1, 1, 0, 0 )),
         new ArrayList<>(Arrays.asList(0, 0, 0, 1, 2, 0, 0, 0 )),
         new ArrayList<>(Arrays.asList(0, 0, 7, 1, 1, 1, 1, 1 ))
     ));
@@ -73,13 +73,18 @@ public class Client {
     }
 
     static boolean isExit(int i, int j, int R, int C, int startI, int startJ) {
-        // Must be on a wall, but NOT the starting wall
+        // Must be on a wall
         boolean onEdge = i == 0 || j == 0 || i == R-1 || j == C-1;
         if (!onEdge) return false;
-        // Started on top wall
-        if (startI == 0) return i != 0;
-        // Started on left wall
-        if (startJ == 0) return j != 0;
+
+        // Started on top wall - must end on left or right wall
+        if (startI == 0) {
+            return j == 0 || j == C-1;
+        }
+        // Started on left wall - must end on top or bottom wall
+        if (startJ == 0) {
+            return i == 0 || i == R-1;
+        }
         return false;
     }
 
